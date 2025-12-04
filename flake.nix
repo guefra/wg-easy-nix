@@ -24,73 +24,47 @@
         inherit system;
       };
 
-      nodeModules =
-        pkgs.runCommand "wg-easy-node-modules" {
-          src = wg-easy-src;
-
-          nativeBuildInputs = with pkgs; [
-            nodejs_20
-            pnpm
-            jq
-          ];
-
-          SSL_CERT_FILE = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
-          NODE_EXTRA_CA_CERTS = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
-
-          NUXT_TELEMETRY_DISABLED = "1";
-
-          outputHashMode = "nar";
-          outputHash = "sha256-hQ2Hh39lIl9jBXiEps1JHLV3FLaY1F8RTEWmi9ayvA4=";
-        } ''
-          cp -r "$src/src" ./src
-          chmod -R u+w ./src
-          cd src
-
-          export HOME="$PWD/.nix-pnpm-home"
-          export XDG_DATA_HOME="$HOME/.local/share"
-          mkdir -p "$XDG_DATA_HOME/pnpm"
-          export PNPM_HOME="$XDG_DATA_HOME/pnpm"
-
-          # Safely remove packageManager field using jq
-          jq 'del(.packageManager)' package.json > package.json.tmp
-          mv package.json.tmp package.json
-
-          ${pkgs.pnpm}/bin/pnpm install --frozen-lockfile --ignore-scripts
-
-          rm -rf .pnpm-store
-          mkdir -p "$out"
-          cp -r node_modules "$out"/
-        '';
+      nodejs = pkgs.nodejs_20;
+      pnpm = pkgs.pnpm.override {inherit nodejs;};
     in rec {
-      wg-easy = pkgs.stdenv.mkDerivation {
+      wg-easy = pkgs.stdenv.mkDerivation (finalAttrs: {
         pname = "wg-easy";
         version = "15.2.0-beta.3";
 
         src = wg-easy-src + "/src";
 
-        nativeBuildInputs = with pkgs; [
-          nodejs_20
-          makeWrapper
+        pnpmDeps = pnpm.fetchDeps {
+          inherit (finalAttrs) pname version;
+          src = wg-easy-src + "/src";
+          fetcherVersion = 2;
+          hash = "sha256-ZG+/gCntF+WoFVlGO8PF4t6mPQtB6TkQB3h0eHtQ2EY=";
+        };
+
+        nativeBuildInputs = [
+          nodejs
+          pkgs.makeWrapper
+          pnpm.configHook
         ];
 
+        env.NUXT_TELEMETRY_DISABLED = "1";
+
         buildPhase = ''
-          chmod -R u+w .
+          runHook preBuild
 
-          cp -r ${nodeModules}/node_modules ./node_modules
-          chmod -R u+w node_modules
+          pnpm build
+          pnpm run cli:build
 
-          export NUXT_TELEMETRY_DISABLED=1
-          export PATH="./node_modules/.bin:$PATH"
-
-          nuxt build
-          node cli/build.js
+          runHook postBuild
         '';
 
         installPhase = ''
-          mkdir -p "$out/app"
+          runHook preInstall
 
+          mkdir -p "$out/app"
           cp -r .output/. "$out/app/"
 
+          # Prune dev dependencies for smaller output
+          pnpm prune --prod --ignore-scripts
           cp -r node_modules "$out/app/node_modules"
 
           mkdir -p "$out/app/server/database"
@@ -98,24 +72,26 @@
 
           mkdir -p "$out/bin"
 
-          makeWrapper ${pkgs.nodejs_20}/bin/node "$out/bin/wg-easy-server" \
+          makeWrapper ${nodejs}/bin/node "$out/bin/wg-easy-server" \
             --chdir "$out/app" \
             --add-flags server/index.mjs
 
-          makeWrapper ${pkgs.nodejs_20}/bin/node "$out/bin/wg-easy-cli" \
+          makeWrapper ${nodejs}/bin/node "$out/bin/wg-easy-cli" \
             --chdir "$out/app" \
             --add-flags server/cli.mjs
+
+          runHook postInstall
         '';
 
         meta = with pkgs.lib; {
           description = "The easiest way to run WireGuard VPN + Web-based Admin UI";
           homepage = "https://github.com/wg-easy/wg-easy";
-          license = lib.licenses.agpl3Plus;
-          maintainers = with lib.maintainers; [
+          license = licenses.agpl3Plus;
+          maintainers = with maintainers; [
             FnlTochka
           ];
         };
-      };
+      });
 
       default = wg-easy;
     });
