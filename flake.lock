@@ -1,0 +1,60 @@
+{
+  "nodes": {
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1764677808,
+        "narHash": "sha256-H3lC7knbXOBrHI9hITQ7modLuX20mYJVhZORL5ioms0=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "1aab89277eb2d87823d5b69bae631a2496cff57a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-25.11",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "nixpkgs": "nixpkgs",
+        "systems": "systems",
+        "wg-easy-src": "wg-easy-src"
+      }
+    },
+    "systems": {
+      "locked": {
+        "lastModified": 1681028828,
+        "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
+        "owner": "nix-systems",
+        "repo": "default",
+        "rev": "da67096a3b9bf56a91d16901293e51ba5b49a27e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-systems",
+        "repo": "default",
+        "type": "github"
+      }
+    },
+    "wg-easy-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1764674764,
+        "narHash": "sha256-8pTIY64v3g3xGnbOnX2J8npxq8gqphXv2z7kM3UpBBc=",
+        "owner": "wg-easy",
+        "repo": "wg-easy",
+        "rev": "68e5216d4b55ec21aa2c0fbc1ee5827c08cd970e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "wg-easy",
+        "repo": "wg-easy",
+        "type": "github"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}

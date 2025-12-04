@@ -1,0 +1,5 @@
+{
+  imports = [
+    ./wg-easy.nix
+  ];
+}

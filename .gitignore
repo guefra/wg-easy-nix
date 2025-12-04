@@ -1,0 +1,27 @@
+# IDE
+/.vscode
+/.idea
+*.swp
+*.swo
+*~
+
+# Nix build artifacts
+result
+result-*
+/nix/store
+.direnv
+
+# OS files
+.DS_Store
+Thumbs.db
+*.orig
+
+# Logs
+*.log
+logs/
+
+# Build outputs
+dist/
+build/
+out/
+.output/
